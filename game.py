@@ -1,6 +1,7 @@
 import pygame
 import random
 import numpy as np
+import math
 from enum import Enum
 from collections import namedtuple
 
@@ -23,7 +24,7 @@ BLUE2 = (0, 100, 255)
 BLACK = (0,0,0)
 
 BLOCK_SIZE = 20
-SPEED = 2000
+SPEED = 20000
 
 class SnakeGameAI:
     
@@ -49,6 +50,7 @@ class SnakeGameAI:
         self.food = None
         self._place_food()
         self.frame_iteration = 0
+        self.frames_from_last_eat = 0
         
     def _place_food(self):
         x = random.randint(0, (self.w-BLOCK_SIZE )//BLOCK_SIZE )*BLOCK_SIZE 
@@ -74,16 +76,22 @@ class SnakeGameAI:
         game_over = False
         if self.is_collision() or self.frame_iteration > 100*len(self.snake):
             game_over = True
-            reward = -10
+            reward = -25
             return reward, game_over, self.score
             
         # 4. place new food or just move
         if self.head == self.food:
+            self.frames_from_last_eat = 0
             reward = 10
             self.score += 1
             self._place_food()
         else:
             self.snake.pop()
+
+
+        START_OF_HUNGER = 10
+        if self.frames_from_last_eat > START_OF_HUNGER*len(self.snake):
+            reward = -1 * math.ceil(len(self.snake) / START_OF_HUNGER)
         
         # 5. update ui and clock
         self._update_ui()
